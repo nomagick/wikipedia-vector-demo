@@ -130,7 +130,11 @@ export class ArticleEmbedder extends AsyncService {
         const tasks = ['retrieval.passage', 'text-matching', 'classification'] as const;
 
         const promises = tasks.map(async (task) => {
-            const r = await this.embeddingsAPI.embedText(allChunks, 'jina-embeddings-v5-text-small', task);
+            const r = await this.embeddingsAPI.embedText(allChunks, 'jina-embeddings-v5-text-small', task).catch((err) => {
+                this.logger.error(`Error embedding text for task ${task}: ${err.message}`, { err });
+
+                return Promise.reject(err);
+            });
 
             const tensors = r.data.map((x) => {
                 const buff = Buffer.from(x.embedding, 'base64');
