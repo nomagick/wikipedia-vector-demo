@@ -128,6 +128,9 @@ export class ArticleEmbedder extends AsyncService {
 
         const allChunks = [brief, ...chunkedBody];
         const tasks = ['retrieval.passage', 'text-matching', 'classification'] as const;
+        if (allChunks.length > 7) {
+            this.logger.debug(`Embedding a larger batch: ${allChunks.length} chunks`);
+        }
 
         const promises = tasks.map(async (task) => {
             const r = await this.embeddingsAPI.embedText(allChunks, 'jina-embeddings-v5-text-small', task).catch((err) => {
