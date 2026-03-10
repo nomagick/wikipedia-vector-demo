@@ -1,3 +1,4 @@
+import { retry } from 'civkit/decorators';
 import { HTTPService } from 'civkit/http';
 
 
@@ -34,9 +35,12 @@ export class JinaReaderAPI extends HTTPService {
                 Authorization: `Bearer ${apiKey}`,
             };
         }
+
+        this.baseOptions.timeout = 180_000;
     }
 
 
+    @retry(2)
     async htmlToMarkdown(html: string, url?: string) {
         const r = await this.postJson<JinaReadResponse>('/', {
             html,

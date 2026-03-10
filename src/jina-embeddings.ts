@@ -1,3 +1,4 @@
+import { retry } from 'civkit';
 import { HTTPService } from 'civkit/http';
 
 
@@ -25,8 +26,11 @@ export class JinaEmbeddingsAPI extends HTTPService {
                 Authorization: `Bearer ${apiKey}`,
             };
         }
+
+        this.baseOptions.timeout = 180_000;
     }
 
+    @retry(2)
     async embedText(texts: string[], model: string, task?: string) {
         const r = await this.postJson<JinaEmbeddingsResponse<string>>('/v1/embeddings', {
             model,
