@@ -1,5 +1,6 @@
 import { retry } from 'civkit';
 import { HTTPService } from 'civkit/http';
+import { RetryAgent, Agent } from 'undici';
 
 
 export interface JinaEmbeddingsResponse<T extends number[] | string = number[]> {
@@ -28,6 +29,12 @@ export class JinaEmbeddingsAPI extends HTTPService {
         }
 
         this.baseOptions.timeout = 180_000;
+        this.baseOptions.dispatcher = new RetryAgent(new Agent(), {
+            statusCodes: [429, 503],
+            maxRetries: 3,
+            retryAfter: true,
+            minTimeout: 100,
+        }) as any;
     }
 
     @retry(2)
