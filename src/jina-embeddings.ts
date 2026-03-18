@@ -1,6 +1,6 @@
-import { retry } from 'civkit';
 import { HTTPService } from 'civkit/http';
 import { RetryAgent, Agent } from 'undici';
+import { RetryAgentCompanion, retryHandler, THROTTLER_STATE } from './retry-agent-companion';
 
 
 export interface JinaEmbeddingsResponse<T extends number[] | string = number[]> {
@@ -28,6 +28,8 @@ export interface JinaReRankResponse {
 
 export class JinaEmbeddingsAPI extends HTTPService {
 
+    companion: RetryAgentCompanion;
+
     constructor(apiKey: string) {
         super('https://api.jina.ai');
         if (apiKey) {
@@ -37,17 +39,31 @@ export class JinaEmbeddingsAPI extends HTTPService {
             };
         }
 
+        this.companion = new RetryAgentCompanion();
+
         this.baseOptions.timeout = 180_000;
         this.baseOptions.dispatcher = new RetryAgent(new Agent(), {
             statusCodes: [429, 503],
             maxRetries: 60,
             retryAfter: true,
             minTimeout: 500,
+            retry: (err, opts, cb) => {
+                const { statusCode } = err as any;
+                if (statusCode === 429 || statusCode === 503) {
+                    if (this.companion.state === THROTTLER_STATE.BLOCKED) {
+                        this.companion.acquire().then(() => cb(null), cb);
+                        return;
+                    }
+                    this.companion.hold();
+                }
+
+                retryHandler(err, opts, cb);
+            },
         }) as any;
     }
 
-    @retry(2)
     async embedText(texts: string[], model: string, task?: string) {
+        await this.companion.acquire();
         const r = await this.postJson<JinaEmbeddingsResponse<string>>('/v1/embeddings', {
             model,
             task,
@@ -55,13 +71,15 @@ export class JinaEmbeddingsAPI extends HTTPService {
             normalized: true,
             embedding_type: 'base64',
             input: texts,
+        }).finally(() => {
+            this.companion.release();
         });
 
         return r.data;
     }
 
-    @retry(2)
     async reRankTexts(query: string, texts: string[], model: string) {
+        await this.companion.acquire();
         const r = await this.postJson<JinaReRankResponse>('/v1/rerank', {
             model,
             query,
@@ -70,6 +88,8 @@ export class JinaEmbeddingsAPI extends HTTPService {
             max_doc_length: 2048,
             truncate: true,
             return_documents: false,
+        }).finally(() => {
+            this.companion.release();
         });
 
         return r.data;
