@@ -139,7 +139,7 @@
                   class="green">E</span><span class="blue">SEARCH</span>
                 </slot>
               </div>
-              <div class="page-numbers">
+              <div :class="`page-numbers ${props.totalPages && props.totalPages > 1 ? '' : 'disabled'}`">
                 <div
                   v-for="pageNum in 10"
                   :key="pageNum"

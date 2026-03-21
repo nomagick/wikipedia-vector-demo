@@ -320,7 +320,7 @@ export class APIHost extends RPCHost {
             buff.writeFloatBE(arr[i], i * Float32Array.BYTES_PER_ELEMENT);
         }
 
-        return buff.toString('base64url');
+        return buff.toString('base64');
 
         // return Array.from(tensor.data as Float32Array);
     }
