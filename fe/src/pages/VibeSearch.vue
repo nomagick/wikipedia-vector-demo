@@ -90,8 +90,14 @@ const topCountries = [
 ];
 
 const topicPrompts = [
+  'getting a job in',
+  'starting a business in',
+  'medical care in',
+  'demography landscape of',
+  'political system of',
+  'education system in',
+  'military capabilities of',
   'cultural heritage of',
-  'military history of',
   'top scholars from',
   'local birds in',
   'traditional food in',
