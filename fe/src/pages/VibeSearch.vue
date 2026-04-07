@@ -109,7 +109,10 @@ const topicPrompts = [
   'endangered species in',
   'economics in',
   'foundations of modern',
-  'absurd events in',
+  'sports culture in',
+  'influential artists from',
+  'transportation system in',
+  'philosophical movements in',
 ];
 
 setTimeout(() => {
